@@ -21,17 +21,13 @@ def mostra():
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
-        # Estrai solo il numero iniziale da RATE ignorando testo successivo
+        # Parser robusto per RATE
         def estrai_valore(val):
-            val = str(val)
-            match = re.search(r"\d{1,3}(?:[\.\d]{0,3})*(?:,\d+)?", val)
-            if match:
-                numero = match.group(0).replace(".", "").replace(",", ".")
-                return float(numero)
-            return None
+            val = str(val).replace("€", "").replace("+", " ").replace(",", ".")
+            match = re.search(r"\d+(?:\.\d+)?", val)
+            return float(match.group()) if match else None
 
         df["RATE"] = df["RATE"].apply(estrai_valore)
-
         df = df.dropna(subset=["L DATE"])
     except Exception as e:
         st.error("Errore nel caricamento dei dati dal Google Sheet.")
