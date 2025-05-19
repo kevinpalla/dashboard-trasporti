@@ -20,7 +20,7 @@ def mostra():
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
-        # Pulizia: mantieni solo simbolo € e formato europeo
+        # Interpreta formato valuta europea
         df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
 
