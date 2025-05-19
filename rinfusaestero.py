@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 import itertools
-import urllib.parse
 import re
 
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
@@ -11,13 +10,14 @@ st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 def mostra():
     st.title("🚛 Analisi Trasporti Rinfusa - Estero")
 
-    sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
-    sheet_name = "RINFUSA CONSELICE"
-    encoded_name = urllib.parse.quote(sheet_name)
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
+    uploaded_file = st.file_uploader("📁 Carica il file Excel con i dati di Rinfusa Conselice", type=["xlsx"])
+
+    if not uploaded_file:
+        st.warning("Carica un file Excel per continuare.")
+        st.stop()
 
     try:
-        df = pd.read_csv(sheet_url)
+        df = pd.read_excel(uploaded_file, sheet_name="RINFUSA CONSELICE")
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
@@ -30,7 +30,7 @@ def mostra():
         df["RATE"] = df["RATE"].apply(estrai_valore)
         df = df.dropna(subset=["L DATE"])
     except Exception as e:
-        st.error("Errore nel caricamento dei dati dal Google Sheet.")
+        st.error("Errore nel caricamento o parsing del file Excel.")
         st.exception(e)
         st.stop()
 
