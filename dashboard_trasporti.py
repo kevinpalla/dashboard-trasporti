@@ -1,12 +1,25 @@
 import streamlit as st
 import pandas as pd
+import urllib.parse
 
 def mostra():
     st.title("📊 Confronto Budget vs Consuntivo 2025")
-    st.markdown("Carica i file Excel di budget e consuntivi trasporti (confezionato e rinfusa)")
+    st.markdown("I dati di **BUDGET 2025** sono caricati automaticamente da Google Sheets.")
 
-    # Upload
-    budget_file = st.file_uploader("📁 File BUDGET 2025", type=["xlsx"])
+    # -------- CONFIGURAZIONE GOOGLE SHEETS -------- #
+    sheet_id = "1XA_G5nIlNd1jr4zGvLBkVBS7gnsunI-YISxUJ0I-p9s"
+
+    def carica_google_sheet(sheet_name):
+        base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
+        full_url = f"{base_url}&sheet={urllib.parse.quote(sheet_name)}"
+        return pd.read_csv(full_url)
+
+    # ----------- CARICAMENTO BUDGET DA GOOGLE ----------- #
+    budget_rinfusa = carica_google_sheet("BUDGET RINFUSA")
+    budget_confezionato = carica_google_sheet("BUDGET CONFEZIONATO")
+
+    # ----------- UPLOAD FILE CONSUNTIVO ----------- #
+    st.markdown("Carica i file consuntivi:")
     confezionato_file = st.file_uploader("📁 File CONSUNTIVO CONFEZIONATO", type=["xlsx"])
     rinfusa_file = st.file_uploader("📁 File CONSUNTIVO RINFUSA", type=["xlsx"])
 
@@ -74,11 +87,9 @@ def mostra():
             cols = cols[:idx] + ["Numero Trasporti 2024"] + cols[idx:]
         return df[cols]
 
-    if budget_file and confezionato_file and rinfusa_file:
+    if confezionato_file and rinfusa_file:
         try:
-            budget_xls = pd.ExcelFile(budget_file)
-            budget_rinfusa = pd.read_excel(budget_xls, sheet_name="BUDGET RINFUSA")
-            budget_confezionato = pd.read_excel(budget_xls, sheet_name="BUDGET CONFEZIONATO")
+            # Preparazione BUDGET
             for df, tipo in [(budget_rinfusa, "Rinfusa"), (budget_confezionato, "Confezionato")]:
                 df["Tipo Trasporto"] = tipo
                 df["Anno"] = 2025
@@ -101,6 +112,7 @@ def mostra():
                 "Costo Medio Viaggio", "Costo €/ton", "Tipo Trasporto"
             ]]
 
+            # CONSUNTIVI
             cons_rinfusa_raw = pd.read_excel(rinfusa_file, sheet_name="RINFUSA", header=4)
             cons_conf_raw = pd.read_excel(confezionato_file, sheet_name="CONFEZIONATO", header=4)
             cons_rinfusa = normalizza_blocchi(cons_rinfusa_raw, "Rinfusa")
