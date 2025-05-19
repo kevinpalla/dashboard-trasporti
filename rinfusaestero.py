@@ -5,9 +5,10 @@ from io import BytesIO
 import itertools
 import urllib.parse
 
+st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
+
 def mostra():
-    st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
-    st.title("🚛 Analisi Trasporti Rinfusa - Estero")
+        st.title("🚛 Analisi Trasporti Rinfusa - Estero")
 
     sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
     sheet_name = "RINFUSA CONSELICE"
