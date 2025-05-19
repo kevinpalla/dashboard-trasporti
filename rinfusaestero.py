@@ -3,34 +3,30 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 import itertools
-import re
+import urllib.parse
 
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 
 def mostra():
     st.title("🚛 Analisi Trasporti Rinfusa - Estero")
 
-    uploaded_file = st.file_uploader("📁 Carica il file Excel con i dati di Rinfusa Conselice", type=["xlsx"])
-
-    if not uploaded_file:
-        st.warning("Carica un file Excel per continuare.")
-        st.stop()
+    sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
+    sheet_name = "RINFUSA CONSELICE"
+    encoded_name = urllib.parse.quote(sheet_name)
+    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
 
     try:
-        df = pd.read_excel(uploaded_file, sheet_name="RINFUSA CONSELICE")
+        df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
-        # Parser robusto per RATE
-        def estrai_valore(val):
-            val = str(val).replace("€", "").replace("+", " ").replace(",", ".")
-            match = re.search(r"\d+(?:\.\d+)?", val)
-            return float(match.group()) if match else None
+        # Interpreta formato valuta europea
+        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
 
-        df["RATE"] = df["RATE"].apply(estrai_valore)
         df = df.dropna(subset=["L DATE"])
     except Exception as e:
-        st.error("Errore nel caricamento o parsing del file Excel.")
+        st.error("Errore nel caricamento dei dati dal Google Sheet.")
         st.exception(e)
         st.stop()
 
