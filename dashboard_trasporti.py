@@ -10,6 +10,9 @@ def mostra():
     confezionato_file = st.file_uploader("📁 File CONSUNTIVO CONFEZIONATO", type=["xlsx"])
     rinfusa_file = st.file_uploader("📁 File CONSUNTIVO RINFUSA", type=["xlsx"])
 
+    # Mostra messaggio se non tutti i file sono caricati
+    if not (budget_file and confezionato_file and rinfusa_file):
+        st.info("Carica un file Excel per continuare.")
 
     def normalizza_blocchi(df, tipo_trasporto):
         base_labels = [

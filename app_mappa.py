@@ -14,6 +14,10 @@ def mostra():
 
     uploaded_file = st.file_uploader("📁 Carica il file Excel", type=["xlsx"])
 
+    # Mostra messaggio se il file non è stato caricato
+    if not uploaded_file:
+        st.info("Carica un file Excel per continuare.")
+
     if uploaded_file:
         xls = pd.ExcelFile(uploaded_file)
         sheet = st.selectbox("Scegli il foglio", xls.sheet_names)
