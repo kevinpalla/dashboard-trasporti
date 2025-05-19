@@ -1,7 +1,7 @@
 import streamlit as st
 import app_mappa
-import dashboard_trasporti
-import rinfusaestero
+import budget_consuntivo
+import rinfusa_estero
 
 st.set_page_config(page_title="Dashboard Trasporti", layout="wide")
 
@@ -11,6 +11,6 @@ pagina = st.sidebar.radio("Vai a:", ["Mappa dei clienti UNIGRA'", "Confronto Bud
 if pagina == "Mappa dei clienti UNIGRA'":
     app_mappa.mostra()
 elif pagina == "Confronto Budget vs Consuntivo 2025":
-    dashboard_trasporti.mostra()
+    budget_consuntivo.mostra()
 elif pagina == "Analisi Trasporti Rinfusa - Estero":
-    rinfusaestero.mostra()
+    rinfusa_estero.mostra()
