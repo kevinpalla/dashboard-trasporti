@@ -12,8 +12,9 @@ def mostra():
 
     uploaded_file = st.file_uploader("📁 Carica il file Excel con i dati di Rinfusa Conselice", type=["xlsx"])
 
+    # Messaggio blu se il file non è stato caricato
     if not uploaded_file:
-        st.warning("Carica un file Excel per continuare.")
+        st.info("Carica un file Excel per continuare.")
         st.stop()
 
     try:
