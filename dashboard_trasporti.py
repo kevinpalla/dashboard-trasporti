@@ -19,9 +19,6 @@ def mostra():
     budget_rinfusa = carica_google_sheet("BUDGET RINFUSA")
     budget_confezionato = carica_google_sheet("BUDGET CONFEZIONATO")
 
-    # DEBUG VISIVO (puoi toglierlo dopo il test)
-    # st.write("Colonne RINFUSA:", budget_rinfusa.columns.tolist())
-
     st.markdown("Carica i file consuntivi:")
     confezionato_file = st.file_uploader("📁 File CONSUNTIVO CONFEZIONATO", type=["xlsx"])
     rinfusa_file = st.file_uploader("📁 File CONSUNTIVO RINFUSA", type=["xlsx"])
@@ -100,13 +97,16 @@ def mostra():
                 df["Italia/Estero"] = None
                 df["Numero Trasporti"] = None
 
-                # Trova colonne corrette anche se sporche
-                col_euro_ton = [c for c in df.columns if "€" in c and "Ton" in c][0]
-                col_tons_budget = [c for c in df.columns if "Tons" in c and "Budget" in c][0]
+                euro_cols = [c for c in df.columns if "€" in c and "Ton" in c]
+                tons_cols = [c for c in df.columns if "Tons" in c and "Budget" in c]
 
-                # DEBUG (facoltativo)
-                # st.write(f"[{tipo}] €/Ton:", col_euro_ton)
-                # st.write(f"[{tipo}] Tons Budget:", col_tons_budget)
+                if not euro_cols or not tons_cols:
+                    st.error(f"⚠️ Colonne non trovate nel foglio '{tipo}'. Verifica che esistano colonne tipo '€/Ton 2025' e 'Tons Budget 2025'.")
+                    st.write("Colonne disponibili:", df.columns.tolist())
+                    st.stop()
+
+                col_euro_ton = euro_cols[0]
+                col_tons_budget = tons_cols[0]
 
                 df["Costo Totale"] = df[col_euro_ton] * df[col_tons_budget]
                 df["Costo Medio Viaggio"] = None
