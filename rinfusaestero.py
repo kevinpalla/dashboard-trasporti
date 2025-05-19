@@ -27,7 +27,7 @@ def mostra():
     st.title("🚚 Analisi Trasporti Rinfusa - Estero")
 
     sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
-    gid = "1331136437"  # ID del foglio
+    gid = "1331136437"  # ID del foglio Google Sheet
 
     try:
         df = carica_dati_da_google_sheet(sheet_id, gid)
@@ -36,6 +36,14 @@ def mostra():
         st.error(f"Errore nel caricamento dei dati: {e}")
         st.stop()
 
+    # Verifica che le date siano presenti
+    if df["L DATE"].dropna().empty:
+        st.error("⚠️ Nessuna data valida trovata nei dati.")
+        st.stop()
+    else:
+        min_date, max_date = df["L DATE"].min(), df["L DATE"].max()
+        date_range = st.sidebar.date_input("Periodo di carico", [min_date, max_date])
+
     all_carriers = df["CARRIER"].dropna().unique().tolist()
     all_colors = px.colors.qualitative.Alphabet + px.colors.qualitative.Set3 + px.colors.qualitative.Dark24
     if len(all_carriers) > len(all_colors):
@@ -43,8 +51,6 @@ def mostra():
     color_map = dict(zip(sorted(all_carriers), all_colors))
 
     st.sidebar.header("🔎 Filtri")
-    min_date, max_date = df["L DATE"].min(), df["L DATE"].max()
-    date_range = st.sidebar.date_input("Periodo di carico", [min_date, max_date])
     clienti = st.sidebar.multiselect("Cliente", sorted(df["CUSTOMER"].dropna().unique()))
     trasportatori = st.sidebar.multiselect("Trasportatore", sorted(df["CARRIER"].dropna().unique()))
 
