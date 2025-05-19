@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 import itertools
-import urllib.parse
 
 st.set_page_config(page_title="Analisi Rinfusa Estero", layout="wide")
 
@@ -11,13 +10,24 @@ st.set_page_config(page_title="Analisi Rinfusa Estero", layout="wide")
 def carica_dati_da_google_sheet(sheet_id, gid):
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     df = pd.read_csv(url)
+
+    # Rimuove righe completamente vuote
+    df.dropna(how='all', inplace=True)
+
+    # Converte colonne
+    df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
+    df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
+
+    # Rimuove righe con valori essenziali mancanti
+    df = df.dropna(subset=["L DATE", "RATE"])
+
     return df
 
 def mostra():
     st.title("🚚 Analisi Trasporti Rinfusa - Estero")
 
     sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
-    gid = "1331136437"  # ID del foglio (tab)
+    gid = "1331136437"  # ID del foglio
 
     try:
         df = carica_dati_da_google_sheet(sheet_id, gid)
@@ -25,11 +35,6 @@ def mostra():
     except Exception as e:
         st.error(f"Errore nel caricamento dei dati: {e}")
         st.stop()
-
-    # Conversioni e pulizia
-    df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
-    df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
-    df = df.dropna(subset=["L DATE"])
 
     all_carriers = df["CARRIER"].dropna().unique().tolist()
     all_colors = px.colors.qualitative.Alphabet + px.colors.qualitative.Set3 + px.colors.qualitative.Dark24
@@ -109,5 +114,5 @@ def mostra():
     excel_bytes = convert_df_multi()
     st.download_button("Scarica Excel", data=excel_bytes, file_name="analisi_rinfusa.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-# Esegui l'app
+# Avvia l'app
 mostra()
