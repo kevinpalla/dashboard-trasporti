@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 import itertools
+import urllib.parse
 
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 st.title("🚛 Analisi Trasporti Rinfusa - Estero")
@@ -10,20 +11,21 @@ st.title("🚛 Analisi Trasporti Rinfusa - Estero")
 # ----------- CARICAMENTO GOOGLE SHEET ----------- #
 sheet_id = "1kv_VPHDtE1DDmGfLKtRmyNACfcIulr6p"
 sheet_name = "RINFUSA CONSELICE"
-sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+encoded_name = urllib.parse.quote(sheet_name)
+sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
 
 try:
     df = pd.read_csv(sheet_url)
     df.columns = df.columns.str.strip()
     df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
     df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
-    df = df.dropna(subset=["L DATE"])  # rimuovi righe senza data
+    df = df.dropna(subset=["L DATE"])
 except Exception as e:
     st.error("Errore nel caricamento dei dati dal Google Sheet.")
     st.exception(e)
     st.stop()
 
-# ----------- COLORI UNIVOCI PER TRASPORTATORI ----------- #
+# ----------- COLORI PER CARRIER ----------- #
 all_carriers = df["CARRIER"].dropna().unique().tolist()
 all_colors = px.colors.qualitative.Alphabet + px.colors.qualitative.Set3 + px.colors.qualitative.Dark24
 if len(all_carriers) > len(all_colors):
@@ -60,6 +62,7 @@ selected_mese = st.selectbox("Seleziona Mese", options=["Tutti"] + sorted(df_fil
 df_vpt = df_filtered[df_filtered["Anno"] == selected_anno]
 if selected_mese != "Tutti":
     df_vpt = df_vpt[df_vpt["Mese Solo"] == int(selected_mese)]
+
 df_vpt_grouped = df_vpt.groupby(["Mese", "CARRIER"]).size().reset_index(name="Totale Viaggi")
 fig_vpt = px.bar(df_vpt_grouped, x="Mese", y="Totale Viaggi", color="CARRIER", barmode="group", color_discrete_map=color_map)
 st.plotly_chart(fig_vpt, use_container_width=True)
