@@ -20,7 +20,8 @@ def mostra():
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
-        df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
+        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", 	"").str.replace(",", ".")
+	df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
         df = df.dropna(subset=["L DATE"])
     except Exception as e:
         st.error("Errore nel caricamento dei dati dal Google Sheet.")
