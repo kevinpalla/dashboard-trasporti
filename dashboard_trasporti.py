@@ -12,7 +12,10 @@ def mostra():
     def carica_google_sheet(sheet_name):
         base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
         full_url = f"{base_url}&sheet={urllib.parse.quote(sheet_name)}"
-        return pd.read_csv(full_url)
+        df = pd.read_csv(full_url)
+        # ✅ Pulisce gli spazi e caratteri speciali invisibili
+        df.columns = df.columns.str.strip().str.replace('\u202f', ' ').str.replace('\xa0', ' ')
+        return df
 
     # ----------- CARICAMENTO BUDGET DA GOOGLE ----------- #
     budget_rinfusa = carica_google_sheet("BUDGET RINFUSA")
