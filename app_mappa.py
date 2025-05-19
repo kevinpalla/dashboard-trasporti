@@ -13,6 +13,9 @@ def mostra():
     st.title("🗺️ Mappa dei clienti UNIGRA'")
 
     uploaded_file = st.file_uploader("📁 Carica il file Excel", type=["xlsx"])
+	if not uploaded_file:
+        st.warning("Carica un file Excel per continuare.")
+        st.stop()
 
     if uploaded_file:
         xls = pd.ExcelFile(uploaded_file)
