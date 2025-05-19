@@ -6,22 +6,22 @@ def mostra():
     st.title("📊 Confronto Budget vs Consuntivo 2025")
     st.markdown("I dati di **BUDGET 2025** sono caricati automaticamente da Google Sheets.")
 
-    # -------- CONFIGURAZIONE GOOGLE SHEETS -------- #
     sheet_id = "1XA_G5nIlNd1jr4zGvLBkVBS7gnsunI-YISxUJ0I-p9s"
 
     def carica_google_sheet(sheet_name):
         base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
         full_url = f"{base_url}&sheet={urllib.parse.quote(sheet_name)}"
         df = pd.read_csv(full_url)
-        # ✅ Pulisce gli spazi e caratteri speciali invisibili
         df.columns = df.columns.str.strip().str.replace('\u202f', ' ').str.replace('\xa0', ' ')
         return df
 
-    # ----------- CARICAMENTO BUDGET DA GOOGLE ----------- #
+    # Carica da Google
     budget_rinfusa = carica_google_sheet("BUDGET RINFUSA")
     budget_confezionato = carica_google_sheet("BUDGET CONFEZIONATO")
 
-    # ----------- UPLOAD FILE CONSUNTIVO ----------- #
+    # DEBUG VISIVO (puoi toglierlo dopo il test)
+    # st.write("Colonne RINFUSA:", budget_rinfusa.columns.tolist())
+
     st.markdown("Carica i file consuntivi:")
     confezionato_file = st.file_uploader("📁 File CONSUNTIVO CONFEZIONATO", type=["xlsx"])
     rinfusa_file = st.file_uploader("📁 File CONSUNTIVO RINFUSA", type=["xlsx"])
@@ -92,19 +92,28 @@ def mostra():
 
     if confezionato_file and rinfusa_file:
         try:
-            # Preparazione BUDGET
+            # Prepara BUDGET
             for df, tipo in [(budget_rinfusa, "Rinfusa"), (budget_confezionato, "Confezionato")]:
                 df["Tipo Trasporto"] = tipo
                 df["Anno"] = 2025
                 df["Cliente"] = "BUDGET"
                 df["Italia/Estero"] = None
                 df["Numero Trasporti"] = None
-                df["Costo Totale"] = df["€/Ton 2025"] * df["Tons Budget 2025"]
+
+                # Trova colonne corrette anche se sporche
+                col_euro_ton = [c for c in df.columns if "€" in c and "Ton" in c][0]
+                col_tons_budget = [c for c in df.columns if "Tons" in c and "Budget" in c][0]
+
+                # DEBUG (facoltativo)
+                # st.write(f"[{tipo}] €/Ton:", col_euro_ton)
+                # st.write(f"[{tipo}] Tons Budget:", col_tons_budget)
+
+                df["Costo Totale"] = df[col_euro_ton] * df[col_tons_budget]
                 df["Costo Medio Viaggio"] = None
                 df.rename(columns={
                     "Nazione": "Nazione",
-                    "€/Ton 2025": "Costo €/ton",
-                    "Tons Budget 2025": "Peso Netto (tons)"
+                    col_euro_ton: "Costo €/ton",
+                    col_tons_budget: "Peso Netto (tons)"
                 }, inplace=True)
 
             budget_df = pd.concat([
@@ -115,7 +124,6 @@ def mostra():
                 "Costo Medio Viaggio", "Costo €/ton", "Tipo Trasporto"
             ]]
 
-            # CONSUNTIVI
             cons_rinfusa_raw = pd.read_excel(rinfusa_file, sheet_name="RINFUSA", header=4)
             cons_conf_raw = pd.read_excel(confezionato_file, sheet_name="CONFEZIONATO", header=4)
             cons_rinfusa = normalizza_blocchi(cons_rinfusa_raw, "Rinfusa")
