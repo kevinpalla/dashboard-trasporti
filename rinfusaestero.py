@@ -5,7 +5,6 @@ from io import BytesIO
 import itertools
 import urllib.parse
 
-# Deve essere prima di tutto il resto di Streamlit
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 
 def mostra():
@@ -20,8 +19,11 @@ def mostra():
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
-        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", 	"").str.replace(",", ".")
-	df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
+
+        # Pulisce e converte RATE (rimuove € e formatta correttamente numeri europei)
+        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
+
         df = df.dropna(subset=["L DATE"])
     except Exception as e:
         st.error("Errore nel caricamento dei dati dal Google Sheet.")
