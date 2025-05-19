@@ -4,7 +4,6 @@ import plotly.express as px
 from io import BytesIO
 import itertools
 import urllib.parse
-import re
 
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 
@@ -21,20 +20,8 @@ def mostra():
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
-        # Pulizia avanzata del campo RATE
-        def estrai_rate(val):
-            val = str(val)
-            val = re.sub(r"[^\d,\.]", "", val)  # Tieni solo cifre e separatori
-            if val.count(",") == 1 and val.count(".") > 1:
-                val = val.replace(".", "")
-                val = val.replace(",", ".")
-            elif val.count(",") > 1:
-                val = val.replace(",", "")
-            elif "," in val:
-                val = val.replace(",", ".")
-            return val
-
-        df["RATE"] = df["RATE"].apply(estrai_rate)
+        # Pulizia: mantieni solo simbolo € e formato europeo
+        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
 
         df = df.dropna(subset=["L DATE"])
@@ -42,14 +29,6 @@ def mostra():
         st.error("Errore nel caricamento dei dati dal Google Sheet.")
         st.exception(e)
         st.stop()
-
-    # Diagnosi per RICOTTO
-    st.subheader("🧪 Verifica specifica: RICOTTO")
-    df_ricotto = df[df["CARRIER"].str.upper().str.contains("RICOTTO", na=False)]
-    st.write("Numero righe trovate:", len(df_ricotto))
-    st.dataframe(df_ricotto[["CARRIER", "RATE"]].head(20))
-    st.write("Valori unici RATE per RICOTTO:")
-    st.write(df_ricotto["RATE"].unique())
 
     all_carriers = df["CARRIER"].dropna().unique().tolist()
     all_colors = px.colors.qualitative.Alphabet + px.colors.qualitative.Set3 + px.colors.qualitative.Dark24
