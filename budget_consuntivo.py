@@ -129,6 +129,12 @@ def mostra():
                 df_merge = df_merge[~df_merge["Costo €/ton _Budget2025"].isin([float("inf")])]
                 df_merge = df_merge[df_merge["Nazione"].str.lower() != "totale"]
                 df_merge["Delta"] = df_merge["Costo €/ton _Consuntivo"] - df_merge["Costo €/ton _Budget2025"]
+
+                # ➕ Arrotonda i numeri a due cifre decimali
+                df_merge["Costo €/ton _Consuntivo"] = df_merge["Costo €/ton _Consuntivo"].round(2)
+                df_merge["Costo €/ton _Budget2025"] = df_merge["Costo €/ton _Budget2025"].round(2)
+                df_merge["Delta"] = df_merge["Delta"].round(2)
+
                 df_merge["NOTE"] = ""
                 df_merge["🟢 Criticità"] = df_merge["Delta"].apply(delta_label)
 
