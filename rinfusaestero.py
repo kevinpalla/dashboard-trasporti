@@ -4,6 +4,7 @@ import plotly.express as px
 from io import BytesIO
 import itertools
 import urllib.parse
+import re
 
 st.set_page_config(page_title="Analisi Trasporti Rinfusa", layout="wide")
 
@@ -20,8 +21,9 @@ def mostra():
         df.columns = df.columns.str.strip()
         df["L DATE"] = pd.to_datetime(df["L DATE"], errors='coerce')
 
-        # Pulisce e converte RATE (rimuove € e formatta correttamente numeri europei)
-        df["RATE"] = df["RATE"].astype(str).str.replace("€", "").str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
+        # Estrai solo la parte numerica iniziale da RATE (es. "1210 incluso fuel" → 1210)
+        df["RATE"] = df["RATE"].astype(str).str.extract(r"(\d+(?:[\.,]\d+)?)")[0]
+        df["RATE"] = df["RATE"].str.replace(".", "", regex=False).str.replace(",", ".", regex=False)
         df["RATE"] = pd.to_numeric(df["RATE"], errors='coerce')
 
         df = df.dropna(subset=["L DATE"])
