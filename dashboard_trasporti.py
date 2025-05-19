@@ -11,7 +11,7 @@ def mostra():
     def carica_google_sheet(sheet_name):
         base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
         full_url = f"{base_url}&sheet={urllib.parse.quote(sheet_name)}"
-        df = pd.read_csv(full_url)
+        df = pd.read_csv(full_url, skiprows=1)  # ✅ salta intestazioni vuote
         df.columns = df.columns.str.strip().str.replace('\u202f', ' ').str.replace('\xa0', ' ')
         return df
 
