@@ -11,11 +11,10 @@ def mostra():
     def carica_google_sheet(sheet_name):
         base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
         full_url = f"{base_url}&sheet={urllib.parse.quote(sheet_name)}"
-        df = pd.read_csv(full_url, skiprows=1)  # ✅ salta intestazioni vuote
-        df.columns = df.columns.str.strip().str.replace('\u202f', ' ').str.replace('\xa0', ' ')
+        df = pd.read_csv(full_url)
+        df.columns = df.columns.str.strip()
         return df
 
-    # Carica da Google
     budget_rinfusa = carica_google_sheet("BUDGET RINFUSA")
     budget_confezionato = carica_google_sheet("BUDGET CONFEZIONATO")
 
@@ -89,7 +88,6 @@ def mostra():
 
     if confezionato_file and rinfusa_file:
         try:
-            # Prepara BUDGET
             for df, tipo in [(budget_rinfusa, "Rinfusa"), (budget_confezionato, "Confezionato")]:
                 df["Tipo Trasporto"] = tipo
                 df["Anno"] = 2025
@@ -97,23 +95,11 @@ def mostra():
                 df["Italia/Estero"] = None
                 df["Numero Trasporti"] = None
 
-                euro_cols = [c for c in df.columns if "€" in c and "Ton" in c]
-                tons_cols = [c for c in df.columns if "Tons" in c and "Budget" in c]
-
-                if not euro_cols or not tons_cols:
-                    st.error(f"⚠️ Colonne non trovate nel foglio '{tipo}'. Verifica che esistano colonne tipo '€/Ton 2025' e 'Tons Budget 2025'.")
-                    st.write("Colonne disponibili:", df.columns.tolist())
-                    st.stop()
-
-                col_euro_ton = euro_cols[0]
-                col_tons_budget = tons_cols[0]
-
-                df["Costo Totale"] = df[col_euro_ton] * df[col_tons_budget]
+                df["Costo Totale"] = df["€/Ton 2025"] * df["Tons Budget 2025"]
                 df["Costo Medio Viaggio"] = None
                 df.rename(columns={
-                    "Nazione": "Nazione",
-                    col_euro_ton: "Costo €/ton",
-                    col_tons_budget: "Peso Netto (tons)"
+                    "€/Ton 2025": "Costo €/ton",
+                    "Tons Budget 2025": "Peso Netto (tons)"
                 }, inplace=True)
 
             budget_df = pd.concat([
